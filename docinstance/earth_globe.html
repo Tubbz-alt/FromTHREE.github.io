@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>earth globe example</title>
+</head>
+<body>
+<script type="text/javascript" src="../libs/three.js"></script>
+<script type="text/javascript" src="../libs/TrackballControls.js"></script>
+<script type="text/javascript" src="../data/flights.json"></script>
+<script type="text/javascript">
+	const assets_prefix = '../assets/textures/planets/'
+	let width = window.innerWidth
+	let height = window.innerHeight
+	const globe_radius = 200
+	const catmullInterCounts = 5
+
+	const airports = flights.airports
+	const airlines = flights.airlines
+	const china_airlines = [4, 5, 6]
+	const routes = flights.routes
+	let country_colors = new Map()
+	let country_sizes = new Map()
+
+	let scene, camera, renderer, clock, trackball, globe
+
+	window.addEventListener('resize', onWindowResize, false)
+	initScene()
+	addLight()
+	initGlobe()
+	initAirports()
+	// initAirlines()
+	animation()
+
+	function initScene () {
+		scene = new THREE.Scene()
+		camera = new THREE.PerspectiveCamera(45, width / height, 1, 1000)
+		renderer = new THREE.WebGLRenderer()
+		clock = new THREE.Clock()
+		trackball = new THREE.TrackballControls(camera)
+		trackball.rotateSpeed = 1.0
+		trackball.zoomSpeed = 1.0
+		trackball.panSpeed = 1.0
+		renderer.setSize(width, height)
+		camera.position.z = 600
+		document.body.appendChild(renderer.domElement)
+	}
+
+	function initGlobe () {
+		let globe_geom = new THREE.SphereGeometry(globe_radius, 30, 30)
+		let globe_texture = new THREE.TextureLoader().load(assets_prefix + 'earth.jpg')
+		let globe_bump_texture = new THREE.TextureLoader().load(assets_prefix + 'EarthNormal.png')
+		let globe_mat = new THREE.MeshPhongMaterial({
+			map: globe_texture})
+		globe = new THREE.Mesh(globe_geom, globe_mat)
+		scene.add(globe)
+		renderer.render(scene, camera)
+	}
+
+	function initAirports () {
+		let point_geom = new THREE.BufferGeometry()
+		let size = airports.length
+		let positions = new Float32Array(size * 3)
+		let sizes = new Int32Array(size)
+		let colors = new Float32Array(size)
+		airports.forEach((val, i) => {
+			const pos = lnglatToVector3(val[3], val[4])
+			const country = val[2]
+			let color
+			if (country_colors.get(country) === undefined) {
+				color = createRandomColor()
+				country_colors.set(country, color)
+				country_sizes.set(country, 1)
+			} else {
+				color = country_colors.get(country)
+				let size = country_sizes.get(country) + 1
+				country_sizes.set(country, size)
+			}
+			if (!isNaN(pos.x) && !isNaN(pos.y) && !isNaN(pos.z)) {
+				positions[i * 3] = pos.x
+				positions[i * 3 + 1] = pos.y
+				positions[i * 3 + 2] = pos.z
+				colors[i * 3] = color.r
+				colors[i * 3 + 1] = color.g
+				colors[i * 3 + 2] = color.b
+			}
+		})
+		airports.forEach((val, i) => {
+			sizes[i] = country_sizes.get(val[2])
+		})
+		point_geom.addAttribute('position', new THREE.BufferAttribute(positions, 3))
+		point_geom.addAttribute('color', new THREE.BufferAttribute(colors, 3)) // 怎样把颜色添加到节点上？？？？？？
+		point_geom.addAttribute('size', new THREE.BufferAttribute(sizes, 1))
+		let mat = new THREE.PointsMaterial({color: 0x00ffff})
+		let airport_points = new THREE.Points(point_geom, mat)
+		scene.add(airport_points)
+	}
+
+	function initAirlines () {
+		let routesMap = new Map()
+		let china_routes = []
+		let count = 0
+		routes.forEach((val, i) => {
+			if (routesMap.get(val[0]) === undefined) {
+				routesMap.set(val[0], 1)
+			} else {
+				let count = routesMap.get(val[0]) + 1
+				routesMap.set(val[0], count)
+			}
+			let country1 = airports[val[1]][2]
+			let country2 = airports[val[2]][2]
+			if ((country1 === 'China' || country2 === 'China')) { // 航线中含有中国的
+				count++
+				let start = airports[val[1]]
+				let end = airports[val[2]]
+				china_routes.push(val)
+				let startPos = lnglatToVector3(start[3], start[4])
+				let endPos = lnglatToVector3(end[3], end[4])
+				let vectors = createCatmullVectors(startPos, endPos, catmullInterCounts)
+				let curve = new THREE.CatmullRomCurve3(vectors)
+				let points = curve.getPoints(50)
+				let curve_geom = new THREE.BufferGeometry().setFromPoints(points)
+				let curve_mat = new THREE.LineBasicMaterial({color: 0xffff00})
+				let curve_mesh = new THREE.Line(curve_geom, curve_mat)
+				scene.add(curve_mesh)
+			}
+		})
+	}
+
+	function addLight () {
+		let ambientLight = new THREE.AmbientLight(0xffffff)
+		let spotLight = new THREE.SpotLight(0xffffff)
+		scene.add(ambientLight)
+		scene.add(spotLight)
+	}
+
+	function lnglatToVector3 (lng, lat) {
+		if (lng > 180 || lng < -180 || lat > 90 || lat < -90) {
+			throw new Error('经纬度超出正常范围!')
+			return {x: NaN, y: NaN, z: NaN}
+		}
+		let theta = (90 + parseFloat(lng)) * (Math.PI / 180)
+		let phi = (90 - parseFloat(lat)) * (Math.PI / 180)
+		let vector3 = (new THREE.Vector3()).setFromSpherical(new THREE.Spherical(globe_radius, phi, theta))
+		return vector3
+	}
+
+	function createRandomColor () {
+		return new THREE.Color(
+			Math.floor(Math.random() * 255) / 255,
+			Math.floor(Math.random() * 255) / 255,
+			Math.floor(Math.random() * 255) / 255)
+	}
+
+	function createCatmullVectors (start, end, count) {
+		if (start.clone().sub(end).length() > 0) {
+			let startPos = start.clone()
+			let endPos = end.clone()
+			let distPos = endPos.sub(start)
+			const startLength = startPos.length()
+			let vectors = []
+			vectors.push(start)
+			for (let i = 0; i < count - 1; i++) {
+				let t = (i + 1) / count
+				let distclone = distPos.clone()
+				let temp = distclone.multiplyScalar(t).add(startPos)
+				let scalar = startLength / temp.length()
+				let vt = temp.multiplyScalar(scalar)
+				vectors.push(new THREE.Vector3(vt.x, vt.y, vt.z))
+			}
+			vectors.push(end)
+			return vectors
+		} else {
+			return []
+		}
+	}
+
+	function animation () {
+		requestAnimationFrame(animation)
+		// globe.rotation.y += 0.01
+		trackball.update(clock.getDelta())
+		renderer.render(scene, camera)
+	}
+
+	function onWindowResize () {
+		camera.aspect = window.innerWidth / window.innerHeight
+		camera.updateProjectionMatrix()
+		renderer.setSize(window.innerWidth, window.innerHeight)
+	}
+</script>
+</body>
+</html>
