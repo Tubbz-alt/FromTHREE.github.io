@@ -1,0 +1,18 @@
+# CubeCamera全景相机 #
+创建6个渲染到WebGLRendererTarget的Camera。
+## 构造函数 ##
+** CubeCamera(near, far, cubeResolution) **
+near -- 近裁剪面
+far -- 远裁剪面
+cubeResolution--立方体的边长
+创建一个渲染到WebGLRendererTargetCube的CubeCamera，这个相机有6个PerspectiveCamera。
+## 属性 ##
+** renderTarget **
+生成的立方体纹理
+## 方法 ##
+** update(renderer, scene) **
+renderer -- 当前的WebGL渲染器
+scene -- 当前场景
+更新渲染目标renderTarget
+** clear(renderer, color, depth, stencil) **
+清除渲染目标的颜色，深度，和/或模板缓存。颜色buffer设置为当前渲染器的清除颜色。arguments默认为true。
