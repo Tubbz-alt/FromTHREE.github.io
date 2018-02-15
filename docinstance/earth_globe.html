@@ -5,6 +5,7 @@
 </head>
 <body>
 <script type="text/javascript" src="../libs/three.js"></script>
+<script type="text/javascript" src="../libs/Tween.js"></script>
 <script type="text/javascript" src="../libs/TrackballControls.js"></script>
 <script type="text/javascript" src="../data/flights.json"></script>
 <script type="text/javascript">
@@ -13,6 +14,8 @@
 	let height = window.innerHeight
 	const globe_radius = 200
 	const catmullInterCounts = 5
+	const flyTime = 5 * 1000
+	let curvesPoints = []
 
 	const airports = flights.airports
 	const airlines = flights.airlines
@@ -28,7 +31,8 @@
 	addLight()
 	initGlobe()
 	initAirports()
-	// initAirlines()
+	initAirlines()
+	flyCurves()
 	animation()
 
 	function initScene () {
@@ -41,7 +45,7 @@
 		trackball.zoomSpeed = 1.0
 		trackball.panSpeed = 1.0
 		renderer.setSize(width, height)
-		camera.position.z = 600
+		camera.position.z = 800
 		document.body.appendChild(renderer.domElement)
 	}
 
@@ -108,22 +112,61 @@
 			}
 			let country1 = airports[val[1]][2]
 			let country2 = airports[val[2]][2]
-			if ((country1 === 'China' || country2 === 'China')) { // 航线中含有中国的
+			const type = (country1 === 'China') + (country2 === 'China')
+			if (type >= 1 && country2 === 'China') { // 航线中含有中国的
+			// if (distance > globe_radius) {
 				count++
 				let start = airports[val[1]]
 				let end = airports[val[2]]
 				china_routes.push(val)
 				let startPos = lnglatToVector3(start[3], start[4])
 				let endPos = lnglatToVector3(end[3], end[4])
-				let vectors = createCatmullVectors(startPos, endPos, catmullInterCounts)
-				let curve = new THREE.CatmullRomCurve3(vectors)
-				let points = curve.getPoints(50)
-				let curve_geom = new THREE.BufferGeometry().setFromPoints(points)
-				let curve_mat = new THREE.LineBasicMaterial({color: 0xffff00})
-				let curve_mesh = new THREE.Line(curve_geom, curve_mat)
-				scene.add(curve_mesh)
+				const distance = startPos.distanceTo(endPos)
+				if (distance >= globe_radius / 2) {
+					let vectors
+					let color
+					if (type === 2) {
+						vectors = createCatmullVectors(startPos, endPos, catmullInterCounts)
+						color = 0xffff00
+					} else if (type === 1) {
+						color = 0x0000ff
+						vectors = []
+						const mid = new THREE.Vector3()
+						mid.addVectors(startPos, endPos)
+						vectors.push(startPos, mid, endPos)
+					}
+					let curve = new THREE.CatmullRomCurve3(vectors)
+					let points = curve.getPoints(50)
+					curvesPoints.push(points)
+					let curve_geom = new THREE.BufferGeometry().setFromPoints(points.slice(0, 1))
+					let curve_mat = new THREE.LineBasicMaterial({color: color})
+					let curve_mesh = new THREE.Line(curve_geom, curve_mat)
+					scene.add(curve_mesh)
+				}
 			}
 		})
+	}
+
+	function flyCurves () {
+		let pointsStartIndex = 0
+		let tween = new TWEEN.Tween({index: 1})
+		tween.to({index: 50}, 5000)
+		tween.onUpdate(updateCurve)
+		tween._repeat = 10
+		tween._delay = 3000
+		tween.start()
+		function updateCurve (obj) {
+			let index = Math.ceil(obj.index)
+			scene.children.forEach((child, i) => {
+				if (child.type === 'Line') {
+					let vertices = child.geometry.removeAttribute('position')
+					vertices.setFromPoints(curvesPoints[pointsStartIndex % 240].slice(0, index))
+				  vertices.needUpdate = true
+					pointsStartIndex++
+				}
+			})
+			pointsStartIndex = 0
+		}
 	}
 
 	function addLight () {
@@ -177,6 +220,7 @@
 	function animation () {
 		requestAnimationFrame(animation)
 		// globe.rotation.y += 0.01
+		TWEEN.update()
 		trackball.update(clock.getDelta())
 		renderer.render(scene, camera)
 	}
