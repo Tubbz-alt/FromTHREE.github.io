@@ -1,0 +1,16 @@
+# StereoCamera 3D相机 #
+用来产生3D浮雕（或Parallax Barrier）效果的双透视相机。
+## 构造函数 ##
+StereoCamera()
+## 属性 ##
+** aspect **
+默认为1
+** eyeSep **
+默认为0.064
+** cameraL **
+左相机，这个相机及其渲染的物体都被添加到layer1.
+** cameraR **
+右相机，这个相机及其渲染的物体都被添加到layer2.
+## 方法 ##
+** update(camera) **
+根据传入的相机，更新3D相机。

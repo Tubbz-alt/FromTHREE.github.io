@@ -1,0 +1,46 @@
+# OrthographicCamera正交相机 #
+使用正交投影的相机。这这种投影模式下，无论物体距离相机多远，渲染图象中的对象的大小保持不变。这可以用于渲染2D场景和UI元素等。
+## 构造函数 ##
+OrthographicCamera(left, right, top, bottom, near, far)
+left -- 相机视锥的左平面
+right -- 相机视锥的右平面
+top -- 相机视锥的上平面
+bottom -- 相机视锥的底面
+near -- 相机视锥的近平面
+far -- 相机视锥的远平面
+## 属性 ##
+*在对以下属性做了改变后，必须调用updateProjectionMatrix，才能使属性的改变生效。*
+** bottom **
+相机视锥的底平面。
+** far **
+相机视锥的远平面，默认为2000，合法的取值范围是near-Infinity。
+** isOrthographicCamera **
+用来测试当前或派生类是否为正交相机，默认为true，一般不应该被改变。
+** left **
+相机的左平面。
+** near **
+相机视锥的近平面，默认为0.1.合法的取值范围为0-far。
+*不同于PerspectiveCamera，对于正交相机来说，near为0是合法的。*
+** right **
+相机视锥的右平面。
+** top **
+相机视锥的上平面。
+** view **
+通过setViewOffset设置，默认为null。
+** zoom **
+获取或设置相机的zoom因子，默认为1.
+## 方法 ##
+** setViewOffset(fullWidth, fullHeight, x, y, width, height) **
+fullWidth -- 多视角设置的全宽
+fullHeight-- 多视角设置的全高
+x -- 子照相机的水平偏移
+y -- 子照相机的垂直偏移
+width -- 子照相机的宽度
+height -- 子照相机的高度
+在一个较大的视锥里设置一个偏移，这对于多窗口或多显示器/多机设置是有用的。
+** clearViewOffset() **
+移除setViewOffset设置的偏移。
+** updateProjectionMatrix() **
+更新相机投影矩阵，相机属性有任何改变，都必须被调用才会使属性改变生效。
+** toJSON() **
+返回相机数据的JSON格式。
