@@ -37,7 +37,7 @@
 		<h3>[property:Number buffer]</h3>
 		<div>
 			[page:PropertyMixer valueSize] * 4 大小的 buffer。<br /><br />
-			结构（layout）如下：[ incoming | accu0 | accu1 | orig ]<br /><br />
+			布局（layout）如下：[ incoming | accu0 | accu1 | orig ]<br /><br />
 			插值器可以使用 .buffer 作为他们的 .result，然后数据会转到 'incoming'。<br />
 			'accu0' 和 'accu1' 被用作帧累积结果的帧交织（frame-interleaved）并进行比较以检测变化。<br />
 			'orig' 存储属性的原始状态。<br />

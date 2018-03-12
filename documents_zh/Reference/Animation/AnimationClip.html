@@ -24,9 +24,9 @@
 		<h3>[name]( [param:String name], [param:Number duration], [param:Array tracks] )</h3>
 		<div>
 			[page:String name] —— 该 clip 的名称。<br />
-			[page:Number duration] —— 该 clip 的持续时间（单位为秒）。 如果传入的值为负，
-			持续时间将会从传入的 *tracks* 数组计算。<br />
+			[page:Number duration] —— 该 clip 的持续时间（单位为秒）。 如果传入的值为负，持续时间将会从传入的 *tracks* 数组计算。<br />
 			[page:Array tracks] —— 一个 [page:KeyframeTrack KeyframeTracks] 数组。<br /><br />
+
 
 			注意：除了用构造器直接实例化一个 AnimationClip，也可以用它的一些静态方法创建 AnimationClip：
 			JSON（[page:.parse parse]），变形目标序列（[page:.CreateFromMorphTargetSequence CreateFromMorphTargetSequence]，[page:.CreateClipsFromMorphTargetSequences CreateClipsFromMorphTargetSequences]）或动画层次（animation hierarchies，[page:.parseAnimation parseAnimation]）—— 如果你的模型还没有将 AnimationClip 保存在它的 geometry 的动画数组中。
@@ -100,7 +100,7 @@
 		<h3>[method:AnimationClip CreateFromMorphTargetSequence]( [param:String name], [param:Array morphTargetSequence], [param:Number fps], [param:Boolean noLoop] )</h3>
 		<div>
 			由传入的 geometry 的 [page:Geometry.morphTargets morph targets array]，返回一个新的 AnimationClip，
-			以每秒的名称和帧数为单位。<br /><br />
+			需要传入名称和帧率。<br /><br />
 
 			注意：fps 参数是必需的，但在 *AnimationAction*中， 动画速度可以通过 [page:AnimationAction.setDuration animationAction.setDuration] 被覆盖。
 
@@ -108,7 +108,7 @@
 
 		<h3>[method:AnimationClip findByName]( [param:Object objectOrClipArray], [param:String name] )</h3>
 		<div>
-			通过名称搜索 AnimationClip，第一个参数看做是包含了一个名为 "animation" 数组的 AnimationClip 数组，或 mesh 或 geometry
+			通过名称搜索 AnimationClip，第一个参数看做是包含了一个名为 "animation" 数组的 AnimationClip 数组，或 mesh 或 geometry。
 
 		</div>
 

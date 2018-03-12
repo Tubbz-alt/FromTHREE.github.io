@@ -27,7 +27,7 @@
 
 			除此之外， 一个 *KeyframeTrack* 中通常有两个数组：
 			按序存储所有关键帧的时间值 [page:.times times] 数组，
-			包含动画属性相应的时间的值的数组 [page:.values values]。<br /><br />
+			包含动画属性在相应的时间的值的数组 [page:.values values]。<br /><br />
 
 			某个时间点的值不仅可以是一个简单的数字，也可以（例如）是一个 vector（向量）（如果可以被动画），或一个 quaternion（四元数）。
 			因此，value 数组（[page:.values values]）（也是一个 flat array）可能是 time 数组（[page:.times times]）的三到四倍长。<br /><br />
@@ -44,7 +44,7 @@
 				<li>[page:StringKeyframeTrack]</li>
 				<li>[page:VectorKeyframeTrack]</li>
 			</ul>
-			用不同类型 KeyframeTrack 手动创建 [page:AnimationClip AnimationClips]的一些示例可以从 [link:https://threejs.org/examples/js/AnimationClipCreator.js] 查看。<br /><br />
+			用不同类型 KeyframeTrack 手动创建 [page:AnimationClip AnimationClips]的一些示例可以在 [link:https://threejs.org/examples/js/AnimationClipCreator.js] 中查看。<br /><br />
 
 
 
@@ -83,7 +83,7 @@
 
 
 
-			该名称可以通过 name 或 uuid 指定节点（尽管需要在场景图节点的子树传入到 mixer中）。
+			该名称可以通过 name 或 uuid 指定节点（尽管需要将在场景图节点中的子树传入到 mixer中）。
 			或者，如果该名称以 "."开始，这一 track 将会应用在传入 mixer 中的根节点上。<br /><br />
 
 
@@ -155,7 +155,7 @@
 
 		<h3>[method:DiscreteInterpolant InterpolantFactoryMethodDiscrete]( [link:https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array result] )</h3>
 		<div>
-			根据 [page:KeyframeTrack.times times] 和 [page:KeyframeTrack.times values] 穿件一个新的 [page:DiscreteInterpolant DiscreteInterpolant]。
+			根据 [page:KeyframeTrack.times times] 和 [page:KeyframeTrack.times values] 创建一个新的 [page:DiscreteInterpolant DiscreteInterpolant]。
 			可以传入一个 Float32Array 来接收结果。否则会自动创建一个大小合适的新数组。
 
 
@@ -185,7 +185,7 @@
 
 		<h3>[method:null scale]()</h3>
 		<div>
-			通过一个引子来缩放所有关键帧的时间。<br /><br />
+			通过一个因子来缩放所有关键帧的时间。<br /><br />
 
 			注意：这一方法非常有用，例如，转换成每秒钟一定的帧速率（内部通过 [page:AnimationClip.CreateFromMorphTargetSequence animationClip.CreateFromMorphTargetSequence] 实现）。
 
@@ -194,12 +194,12 @@
 
 		<h3>[method:null setInterpolation]( [param:Constant interpolationType] )</h3>
 		<div>
-			设置爱插值类型。详见 [page:Animation Animation Constants]。
+			设置插值类型。详见 [page:Animation Animation Constants]。
 		</div>
 
 		<h3>[method:null shift]( [param:Number timeOffsetInSeconds] )</h3>
 		<div>
-			及时地将关键帧前移后倒退。
+			及时地将关键帧前移或倒退。
 		</div>
 
 
@@ -216,7 +216,7 @@
 			如果 [page:.times times] 或 [page:.values values] 数组中的任何一个值不合法，或者如果 *times* 数组中的元素是无序的，
 		</div>
 
-		<h2>静态方法a</h2>
+		<h2>静态方法</h2>
 
 		<h3>[method:KeyframeTrack parse]( [param:JSON json] )</h3>
 		<div>

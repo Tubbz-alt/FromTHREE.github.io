@@ -11,8 +11,8 @@
 		<h1>[name]</h1>
 
 		<div class="desc">
-			AnimationMixer 是场景中某个特定对象的动画播放器，当场景中的多个对象单独动画的时候，
-			每个对象都可以使用一个 AnimationMixer。<br /><br />
+			AnimationMixer 是场景中某个特定对象的动画播放器，当场景中的多个对象单独动画的时候，每个对象都可以使用一个 AnimationMixer。<br /><br />
+
 
 
 			有关 three.js 动画系统的不同元素概览，请参阅本手册 'Next Steps' 部分的 'Animation System' 一文查看。
@@ -39,7 +39,7 @@
 
 		<h3>[property:Number timeScale]</h3>
 		<div>
-			全局缩放因子 [page:.time mixer time].<br /><br />
+			全局缩放因子 [page:.time mixer time]。<br /><br />
 
 			注意：设置 mixer 的 timeScale 为 0，然后再设置为 1 可能会让该 mixer 控制的所有 action 暂停/取消暂停。
 
@@ -51,7 +51,7 @@
 
 		<h3>[method:AnimationAction clipAction]([param:AnimationClip clip], [param:Object3D optionalRoot])</h3>
 		<div>
-			为传入的 clip 返回一个 [page:AnimationAction]，可以选择性地使用一个不同于该 mixer 默认的跟对象的根对象。
+			为传入的 clip 返回一个 [page:AnimationAction]，可以选择性地使用一个不同于该 mixer 默认的根对象的根对象。
 			第一个参数可以是一个 [page:AnimationClip] 对象或一个 AnimationClip 的名称。<br /><br />
 
 
@@ -63,7 +63,7 @@
 
 		<h3>[method:AnimationAction existingAction]([param:AnimationClip clip], [param:Object3D optionalRoot])</h3>
 		<div>
-			为传入的 clip 返回存在的 [page:AnimationAction]，可以选择性地使用一个不同于该 mixer 默认的跟对象的根对象。<br /><br />
+			为传入的 clip 返回存在的 [page:AnimationAction]，可以选择性地使用一个不同于该 mixer 默认的根对象的根对象。<br /><br />
 
 
 			第一个参数可以是一个 [page:AnimationClip] 对象或一个 AnimationClip 的名称。<br /><br />
