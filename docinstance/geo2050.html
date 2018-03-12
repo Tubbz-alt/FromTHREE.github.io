@@ -10,14 +10,14 @@
 <script type="text/javascript" src="./geo2050/geoParser.js"></script>
 <script type="text/javascript" src="../data/geo/Echarts/world.js"></script>
 <script type="text/javascript">
-	let scene, camera, renderer, clock, trackball
+	let scene, camera, renderer, ambiLight, directionalLight, clock, trackball
 	createBasicScene()
 	let lines = parseLinesFromGeo(world)
 	createLinesMesh(lines)
-	scene.add(createTextureCircle(1, 6, [116.4072154982, 39.9047253699], './geo2050/img/best-of-week-frame.png'))
-	scene.add(createTextureCircle(1, 6, [116.4072154982, 39.9047253699], './geo2050/img/shadow.png'))
-
-	// scene.add(createBasicMesh('sphere', {r: 490, widthSeg: 50, heightSeg: 50}))
+	createBlingCity([116.4072154982, 39.9047253699])
+	createTextureCity([116.4072154982, 39.9047253699], './geo2050/img/light.jpg')
+	// createTextureCircle(1, 6, [116.4072154982, 39.9047253699], 'geo2050/textures/ash_uvgrid01.jpg', 'geo2050/img/best-of-week-frame.png')
+	// scene.add(circle)
 	animate()
 </script>
 </body>
