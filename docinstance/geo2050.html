@@ -1,24 +1,91 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<meta charset="UTF-8"> 
 	<title>geo 2050</title>
+	<style type="text/css">
+		body {
+			overflow: hidden;
+			margin: 0;
+		}
+		#outer_float_info {
+			position: relative;
+		}
+		#float_info {
+			width: 160px;
+			height: 40px;
+			border-top: 2px solid #48eab6;
+			float: left;
+			position: absolute;
+			top: -100px;
+			left: -100px;
+			background: rgba(0, 0, 0, 0.5);
+			text-align: center;
+			color: white;
+			vertical-align: middle;
+			line-height: 50px;
+		}
+	</style>
 </head>
 <body>
+	<div id='outer_float_info'>
+		<div id='float_info'>
+		</div>
+	</div>
 <script type="text/javascript" src="../libs/three.js"></script>
 <script type="text/javascript" src="../libs/TrackballControls.js"></script>
 <script type="text/javascript" src="./geo2050/basicScene.js"></script>
 <script type="text/javascript" src="./geo2050/geoParser.js"></script>
 <script type="text/javascript" src="../data/geo/Echarts/world.js"></script>
 <script type="text/javascript">
-	let scene, camera, renderer, ambiLight, directionalLight, clock, trackball
-	createBasicScene()
-	let lines = parseLinesFromGeo(world)
-	createLinesMesh(lines)
-	createBlingCity([116.4072154982, 39.9047253699])
-	createTextureCity([116.4072154982, 39.9047253699], './geo2050/img/light.jpg')
-	// createTextureCircle(1, 6, [116.4072154982, 39.9047253699], 'geo2050/textures/ash_uvgrid01.jpg', 'geo2050/img/best-of-week-frame.png')
-	// scene.add(circle)
-	animate()
+	let scene, camera, renderer, ambiLight, directionalLight, fog, clock, trackball, axes, earthImg, earthCtx, earthImgData
+	let fadeIn = true,
+		fadeOut = false,
+		cityPositions = [],
+		currentClosetIndex = 0,
+		preClosetIndex = 0
+	let earthLines = new THREE.Object3D(),
+			earthParticles = new THREE.Object3D(),
+			blingCities = new THREE.Object3D(),
+			blingHexagons = new THREE.Object3D(),
+			blingCones = new THREE.Object3D(),
+			randomStars = new THREE.Object3D(),
+			orbitas = new THREE.Object3D(),
+			sputniks = new THREE.Object3D(),
+			cloud = new THREE.Object3D()
+	earthImg = document.createElement('img')
+  earthImg.src = './geo2050/img/earth_1.png'
+  earthImg.onload = () => {
+  	let earthCanvas = document.createElement('canvas')
+  	earthCtx = earthCanvas.getContext('2d')
+  	earthCanvas.width = earthImg.width
+  	earthCanvas.height = earthImg.height
+  	earthCtx.drawImage(earthImg, 0, 0, earthImg.width, earthImg.height)
+  	earthImgData = earthCtx.getImageData(0, 0, earthImg.width, earthImg.height)
+	  // basic scene
+		createBasicScene()
+		// 地图轮廓
+		let lines = parseLinesFromGeo(world)
+		createEarthLines(lines)
+		// 球面打点
+		createEarthParticles()
+		// 发亮的城市 - 六边形城市和发光的柱子
+		createBlingCities(countries)
+		// 贴图-打点地图
+		// createTextureEarth()
+		// 星空散点
+		createRandomStars(300)
+		// 地球表面散六边形
+		createEarthRandomHexagons()
+		// 外层卫星轨道
+		createOrbitas()
+		// 卫星
+		createSputniks(['./geo2050/station_b.js', './geo2050/station_c.js'])
+		// 云层
+		createCloudGrid()
+		camera.position.z = radius
+		animate()
+  }
 </script>
 </body>
 </html>
