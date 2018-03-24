@@ -33,7 +33,7 @@ function createBasicScene () {
 	trackball.rotateSpeed = 1.0
   trackball.zoomSpeed = 1.0
   trackball.panSpeed = 1.0
-  // trackball.noPan = true
+  trackball.noPan = true
 
   ambiLight = new THREE.AmbientLight(0x141414)
   ambiLight.position.set(0, radius * 2 + 20, radius * 2 + 20)
@@ -53,8 +53,33 @@ function createBasicScene () {
   // scene.fog = fog1
 
   clock = new THREE.Clock()
-  window.addEventListener('mousedown', countryDetail)
+
+  // post process
+  // composer = new THREE.EffectComposer(renderer)
+  // let renderPass = new THREE.RenderPass(scene, camera)
+  // composer.addPass(renderPass)
+  // let shaderPass1 = new THREE.ShaderPass(THREE.RGBShiftShader) 
+  // shaderPass1.uniforms.amount.value = .0015
+  // // shaderPass1.renderToScreen = true
+ 	// composer.addPass(shaderPass1)
+  // // let shaderPass2 = new THREE.ShaderPass(THREE.FXAAShader)
+  // // shaderPass2.renderToScreen = true
+  // // composer.addPass(shaderPass2)
+ 	// let shaderPass3 = new THREE.ShaderPass(THREE.VerticalTiltShiftShader)
+  // shaderPass3.uniforms.r.value = .55
+  // shaderPass3.renderToScreen = true
+  // composer.addPass(shaderPass3)
+
+  // simple post process
+  // composer = new THREE.EffectComposer(renderer)
+  // let renderPass = new THREE.RenderPass(scene, camera)
+  // let effectFilm = new THREE.FilmPass(0.8, 0.325, 256, false)
+  // effectFilm.renderToScreen = true
+  // composer.addPass(renderPass)
+  // composer.addPass(effectFilm)
+
   window.addEventListener('resize', resize)
+  window.addEventListener('mousedown', mouseDownEvents)
 }
 
 function createTextureEarth () {
@@ -427,7 +452,7 @@ function createCloudGrid () {
             vec4 texColor = texture2D( uTex, vUv );
             float _a = _alpha * opacity;
             if( _a <= 0.0 ) discard;
-            _a = _a * ( sin( vUv.y * 4000.0 + gridOffset ) * .5 + .5 );
+            _a = _a * ( sin( vUv.y * 8000.0 + gridOffset ) * .5 + .5 );
             gl_FragColor = vec4( texColor.rgb * diffuse, _a );
         }`,
       transparent: !0,
@@ -452,57 +477,143 @@ function createCloudGrid () {
   scene.add(cloud)
 }
 
-function countryDetail (event) {
-	let x = event.clientX - window.innerWidth / 2,
-		y = window.innerHeight / 2 - event.clientY,
-		z = Math.sqrt(radius * radius - x * x - y * y, 0.5),
-		index1,
-		index2
-	if (!isNaN(z)) {
-		index1 = getExactCountry(new THREE.Vector3(x, y, z))
-		index2 = getExactCountry(new THREE.Vector3(x, y, -1 * z))
-	}
-	if (index1 !== -1 || index2 !== -1) {
-		let distance1 = index1 == -1 ? camera.position.distanceTo(new THREE.Vector3(0, 0, 1000000)) : camera.position.distanceTo(new THREE.Vector3(x, y, z))
-		let distance2 = index2 == -1 ? camera.position.distanceTo(new THREE.Vector3(0, 0, 1000000)) : camera.position.distanceTo(new THREE.Vector3(x, y, -1 * z))
-		let index = distance1 > distance2 ? index2 : index1
-		console.log(index, countries[index])
-	}
-}
-
 function createCountryDetail () {
-	let city = countries[currentClosetIndex],
-		position = cityPositions[currentClosetIndex]
+	let city = countries[currentSelectedIndex],
+		position = cityPositions[currentSelectedIndex],
+		biggerRadius = 25,
+		smallerRadius = 12.5
 	let detail = new THREE.Object3D()
 	detail.name = 'float_detail'
-	let biggerTexture = new THREE.TextureLoader().load('./geo2050/img/bigger.jpg')
-	let smallerTexture = new THREE.TextureLoader().load('./geo2050/img/smaller.jpg')
-	let biggerMaterial = new THREE.MeshBasicMaterial({
-		map: biggerTexture,
-		side: THREE.DoubleSide
-	})
-	let smallerMaterial = new THREE.MeshBasicMaterial({
-		map: smallerTexture,
-		side: THREE.DoubleSide
-	})
-	let smallerCircleMat = new THREE.MeshBasicMaterial({
-		color: 263385797,
-		side: THREE.DoubleSide
-	})
-	let biggerGeometry = new THREE.CircleGeometry(20, 6)
-	let smallerGeometry = new THREE.CircleGeometry(8, 6)
-	let smallerCircle = new THREE.CircleGeometry(10, 6)
-	let bigger = new THREE.Mesh(biggerGeometry, biggerMaterial)
-	let smaller = new THREE.Mesh(smallerGeometry, smallerMaterial)
-	let circle = new THREE.Mesh(smallerCircle, smallerCircleMat)
-	setPosition(smaller, {x: 10, y: Math.cos(Math.PI / 6) * 20, z: 0.2})
-	setPosition(circle, {x: 10, y: Math.cos(Math.PI / 6) * 20, z: 0.1})
+  // hexagon texture, material, geometry
+	let biggerTexture = new THREE.TextureLoader().load('./geo2050/img/bigger.jpg'),
+		smallerTexture = new THREE.TextureLoader().load('./geo2050/img/smaller.jpg'),
+		biggerMaterial = new THREE.MeshBasicMaterial({
+			map: biggerTexture,
+			side: THREE.DoubleSide
+		}),
+		smallerMaterial = new THREE.MeshBasicMaterial({
+			map: smallerTexture,
+			side: THREE.DoubleSide
+		}),
+	  smallerCircleMat = new THREE.MeshBasicMaterial({
+			color: 263385797,
+			side: THREE.DoubleSide
+		})
+  // 抗锯齿
+  biggerMaterial.map.wrapT
+  biggerMaterial.map.wrapS
+  smallerMaterial.map.wrapS
+  smallerMaterial.map.wrapT
+  // hexagon mesh
+	let biggerGeometry = new THREE.CircleGeometry(biggerRadius, 6),
+		smallerGeometry = new THREE.CircleGeometry(smallerRadius - 3, 6),
+		smallerCircle = new THREE.CircleGeometry(smallerRadius, 6)
+  // top and down triangle vertices and geometry
+	let topTriVertices = [
+			smallerCircle.vertices[2],
+			smallerCircle.vertices[1],
+			new THREE.Vector3(smallerCircle.vertices[1].x, smallerCircle.vertices[2].y, smallerCircle.vertices[2].z)
+		],
+		downTriVertices = [
+			smallerCircle.vertices[1],
+			smallerCircle.vertices[6],
+			new THREE.Vector3(smallerCircle.vertices[1].x, smallerCircle.vertices[6].y, smallerCircle.vertices[6].z),
+		],
+    topTriGeometry = new THREE.Geometry(),
+    downTriGeometry = new THREE.Geometry()
+    topTriGeometry.vertices = topTriVertices
+    downTriGeometry.vertices = downTriVertices
+  // top and down tip
+  let topTipGeometry = new THREE.PlaneGeometry(40, Math.cos(Math.PI / 6) * 12),
+    topTipMaterial = new THREE.MeshBasicMaterial({
+      side: THREE.DoubleSide
+    }),
+    downTipGeometry = new THREE.PlaneGeometry(40, Math.cos(Math.PI / 6) * 12),
+    downTipMaterial = new THREE.MeshBasicMaterial({
+      side: THREE.DoubleSide
+    }),
+    canvasTop = createTipsTexture('float_tip1', city.name, '#fff', '#000'),
+    canvasDown = createTipsTexture('float_tip2', '1 PERCEPTION', '#000', '#fff'),
+    topTexture = new THREE.Texture(canvasTop),
+    downTexture = new THREE.Texture(canvasDown)
+  topTexture.needsUpdate = true
+  topTipMaterial.map = topTexture
+  downTexture.needsUpdate = true
+  downTipMaterial.map = downTexture
+  topTriGeometry.faces = [
+    new THREE.Face3(0, 1, 2)
+  ]
+  downTriGeometry.faces = [
+    new THREE.Face3(0, 1, 2)
+  ]
+  // mesh
+	let bigger = new THREE.Mesh(biggerGeometry, biggerMaterial),
+		smaller = new THREE.Mesh(smallerGeometry, smallerMaterial),
+		circle = new THREE.Mesh(smallerCircle, smallerCircleMat),
+    topTri = new THREE.Mesh(topTriGeometry, new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide})),
+    downTri = new THREE.Mesh(downTriGeometry, new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.DoubleSide}))
+	  topTip = new THREE.Mesh(topTipGeometry, topTipMaterial),
+		downTip = new THREE.Mesh(downTipGeometry, downTipMaterial)
+	topTip.name = 'topTip'
+	downTip.name = 'downTip'
+	setPosition(smaller, {x: smallerRadius, y: Math.cos(Math.PI / 6) * biggerRadius, z: 0.2})
+	setPosition(circle, {x: smallerRadius, y: Math.cos(Math.PI / 6) * biggerRadius, z: 0.1})
+	setPosition(topTip, {x: smallerRadius + 2 + 20 + 12.5, y: Math.cos(Math.PI / 6) * biggerRadius + 6, z: 0.1})
+	setPosition(downTip, {x: smallerRadius + 2 + 20 + 12.5, y: Math.cos(Math.PI / 6) * biggerRadius - 6.25, z: 0.1})
+  setPosition(topTri, {x: smallerRadius + 2, y: Math.cos(Math.PI / 6) * biggerRadius + 0.25, z: 0.1})
+  setPosition(downTri, {x: smallerRadius + 2, y: Math.cos(Math.PI / 6) * biggerRadius, z: 0.1})
+
 	detail.add(bigger)
 	detail.add(smaller)
 	detail.add(circle)
+	detail.add(topTip)
+	detail.add(downTip)
+  detail.add(topTri)
+  detail.add(downTri)
 	setPosition(detail, position)
-	// detail.lookAt(new THREE.Vector3(position.x * 3, position.y * 3, position.z * 3))
+	createCountrySpriteDetail()
 	scene.add(detail)
+}
+
+function createTipsTexture (id, string, background, fontColor) {
+	let canvas = document.querySelector('#' + id)
+  canvas.width = 128
+  canvas.height = 32
+	let	ctx = canvas.getContext('2d')
+
+	ctx.fillStyle = background
+	ctx.fillRect(0, 0, 128, 32)
+
+	string !== '1 PERCEPTION' && string.length > 8 ? string = string.substring(0, 9)  : string
+
+	ctx.fillStyle = fontColor
+	ctx.font = '12px italic'
+	ctx.fillText(string, 2, 20)
+
+	ctx.stroke()
+  return canvas
+}
+
+function updateDetailTip () {
+	let canvasTop = createTipsTexture('float_tip1', countries[currentSelectedIndex].name, '#fff', '#000'),
+		canvasDown = createTipsTexture('float_tip2', '1 PERCEPTION', '#000', '#fff'),
+		topTip = scene.getObjectByName('topTip'),
+		downTip = scene.getObjectByName('downTip')
+	topTip.material.map.needsUpdate = true
+	downTip.material.map.needsUpdate = true
+}
+
+function createCountrySpriteDetail () {
+	let spriteMap = new THREE.TextureLoader().load( "./geo2050/img/bigger.jpg" )
+	let spriteMaterial = new THREE.SpriteMaterial( {
+		map: spriteMap,
+		color: 0xffffff
+	} )
+	let sprite = new THREE.Sprite( spriteMaterial );
+	sprite.name = 'float_sprite_detail'
+	let position = cityPositions[currentSelectedIndex]
+	setPosition(sprite, {x: position.x * 6 / 5, y: position.y * 6 / 5, z: position.z * 6 / 5})
+	scene.add( sprite )
 }
 
 function updateClosetCountry () {
@@ -543,18 +654,44 @@ function updateClosetCountry () {
 	let screenPos = worldToScreenPosition(new THREE.Vector3(secondPos.x, secondPos.y, secondPos.z), camera)
 	div.style.left = screenPos.x + 'px'
 	div.style.top = screenPos.y + 'px'
-	// 更新detail
-	let detail = scene.getObjectByName('float_detail')
-	if (!detail) {
-		createCountryDetail()
+}
+
+function mouseDownEvents (e) {
+	let selectIndex = -1
+	for (let i =0, length = countries.length; i < length; i++) {
+		let position = cityPositions[i],
+			screenPos = worldToScreenPosition(new THREE.Vector3(position.x, position.y, position.z), camera),
+			distX = screenPos.x - e.clientX,
+			distY = screenPos.y - e.clientY,
+			distance = Math.sqrt((distX * distX + distY * distY)),
+			dot = new THREE.Vector3(position.x, position.y, position.z).dot(camera.position)
+		if (distance <= 25 && dot >= 0) {
+			selectIndex = i
+			break
+		}
+	}
+	let obj = scene.getObjectByName('float_detail')
+	if (selectIndex !== -1) {
+		currentSelectedIndex = selectIndex
+		cameraStop = true
+		if (obj) {
+			obj.visible = true
+			updateDetailTip()
+		} else {
+			createCountryDetail()
+		}
 	} else {
-		setPosition(detail, new THREE.Vector3(secondPos.x, secondPos.y, secondPos.z))
+		cameraStop = false
+		if (obj) {
+			obj.visible = false
+		}
+		currentSelectedIndex = -1
 	}
 }
 
 function animate () {
 	requestAnimationFrame(animate)
-  var delta = clock.getDelta()
+  let delta = clock.getDelta()
   if (camera.position.z < 500 && fadeIn) {
   	camera.position.z += 2.5
   } else if (fadeIn) {
@@ -573,14 +710,41 @@ function animate () {
 		}
 	  trackball.update(delta)
 	  // 更新camera位置以使场景转动
-		let spherical = new THREE.Spherical
-		spherical.setFromVector3(camera.position)
-		spherical.theta += SPEED
-		let position = new THREE.Vector3()
-		position.setFromSpherical(spherical)
-		camera.position.x = position.x
-		camera.position.y = position.y
-		camera.position.z = position.z
+		let div = document.querySelector('#float_info')
+	  if (!cameraStop) {
+	  	div.style.display = 'block'
+		  let spherical = new THREE.Spherical
+			spherical.setFromVector3(camera.position)
+			spherical.theta += SPEED
+			let position = new THREE.Vector3()
+			position.setFromSpherical(spherical)
+			camera.position.x = position.x
+			camera.position.y = position.y
+			camera.position.z = position.z
+	  } else {
+			div.style.display = 'none'
+			// cloud, stars转动
+			randomStars.rotation.y += SPEED
+			// 更新detail
+			let detail = scene.getObjectByName('float_detail')
+			let sprite = scene.getObjectByName('float_sprite_detail')
+			if (!detail) {
+				createCountryDetail()
+			} else {
+				updateDetailTip()
+				let position = cityPositions[currentSelectedIndex],
+					secondPos = {
+						x: position.x * 6 / 5,
+						y: position.y * 6 / 5,
+						z: position.z * 6 / 5
+					}
+				setPosition(sprite, secondPos)
+				setPosition(detail, sprite.position)
+				detail.lookAt(camera.position)
+				let euler = camera.rotation
+				detail.setRotationFromEuler(euler) // 相机旋转后，tip也会跟着旋转，需要乘以相机旋转的矩阵使其以一个未经旋转的姿态显示
+			}
+	  }
 		// 更新离相机最近的国家/城市
 		updateClosetCountry()
 		// 球面粒子闪烁
@@ -593,6 +757,7 @@ function animate () {
 		})
   }
 	renderer.render(scene, camera)
+	// composer.render(delta)
 }
 
 function resize () {

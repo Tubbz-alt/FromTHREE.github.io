@@ -8,12 +8,16 @@
 			overflow: hidden;
 			margin: 0;
 		}
-		#outer_float_info {
+		#outer_float_info, #outer_float_tip {
 			position: relative;
 		}
+		#outer_float_tip {
+			left: -200px;
+			top: -200px;
+			/*width: 50px;*/
+			/*height: 30px;*/
+		}
 		#float_info {
-			width: 160px;
-			height: 40px;
 			border-top: 2px solid #48eab6;
 			float: left;
 			position: absolute;
@@ -24,6 +28,11 @@
 			color: white;
 			vertical-align: middle;
 			line-height: 50px;
+			width: 200px;
+		}
+		#float_tip1, #float_tip2 {
+			position: absolute;
+			cursor: pointer;
 		}
 	</style>
 </head>
@@ -32,18 +41,36 @@
 		<div id='float_info'>
 		</div>
 	</div>
+	<div id='outer_float_tip'>
+		<canvas id='float_tip1'></canvas>
+		<canvas id='float_tip2'></canvas>
+	</div>
 <script type="text/javascript" src="../libs/three.js"></script>
 <script type="text/javascript" src="../libs/TrackballControls.js"></script>
+<script type="text/javascript" src="../libs/postprocess/CopyShader.js"></script>
+<script type="text/javascript" src="../libs/postprocess/RGBShiftShader.js"></script>
+<script type="text/javascript" src="../libs/postprocess/VerticalTiltShiftShader.js"></script>
+<script type="text/javascript" src="../libs/postprocess/FXAAShader.js"></script>
+<script type="text/javascript" src="../libs/postprocess/FilmShader.js"></script>
+<script type="text/javascript" src="../libs/postprocess/FilmPass.js"></script>
+<script type="text/javascript" src="../libs/postprocess/EffectComposer.js"></script>
+<script type="text/javascript" src="../libs/postprocess/ShaderPass.js"></script>
+<script type="text/javascript" src="../libs/postprocess/RenderPass.js"></script>
+<script type="text/javascript" src="../libs/postprocess/MaskPass.js"></script>
 <script type="text/javascript" src="./geo2050/basicScene.js"></script>
 <script type="text/javascript" src="./geo2050/geoParser.js"></script>
 <script type="text/javascript" src="../data/geo/Echarts/world.js"></script>
 <script type="text/javascript">
-	let scene, camera, renderer, ambiLight, directionalLight, fog, clock, trackball, axes, earthImg, earthCtx, earthImgData
+	let composer, scene, camera, renderer, ambiLight, directionalLight, fog, clock, trackball, axes, earthImg, earthCtx, earthImgData
+	let canvasTop
 	let fadeIn = true,
 		fadeOut = false,
+		hover = true,
 		cityPositions = [],
 		currentClosetIndex = 0,
-		preClosetIndex = 0
+		preClosetIndex = 0,
+		currentSelectedIndex = -1
+	let cameraStop = false
 	let earthLines = new THREE.Object3D(),
 			earthParticles = new THREE.Object3D(),
 			blingCities = new THREE.Object3D(),
@@ -54,7 +81,7 @@
 			sputniks = new THREE.Object3D(),
 			cloud = new THREE.Object3D()
 	earthImg = document.createElement('img')
-  earthImg.src = './geo2050/img/earth_1.png'
+  earthImg.src = './geo2050/img/earth_lx.jpg'
   earthImg.onload = () => {
   	let earthCanvas = document.createElement('canvas')
   	earthCtx = earthCanvas.getContext('2d')
